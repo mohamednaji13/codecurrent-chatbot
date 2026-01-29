@@ -10,8 +10,8 @@
 
   // Use absolute positioning and update via JS
   function updatePosition() {
-    const width = chatOpen ? 400 : 70;
-    const height = chatOpen ? 600 : 70;
+    const width = chatOpen ? 450 : 140;
+    const height = chatOpen ? 650 : 140;
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
     const viewportHeight = window.innerHeight;
@@ -49,13 +49,13 @@
       * { margin: 0; padding: 0; box-sizing: border-box; }
       :host { all: initial; display: block; width: 100%; height: 100%; }
       .btn {
-        width: 60px;
-        height: 60px;
+        width: 120px;
+        height: 120px;
         border-radius: 50%;
         background: linear-gradient(135deg, #dc2626, #ef4444);
         border: none;
         cursor: pointer;
-        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+        box-shadow: 0 8px 30px rgba(220, 38, 38, 0.4);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -64,8 +64,8 @@
         right: 0;
         transition: transform 0.2s;
       }
-      .btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5); }
-      .btn svg { width: 28px; height: 28px; fill: white; }
+      .btn:hover { transform: scale(1.05); box-shadow: 0 10px 40px rgba(220, 38, 38, 0.5); }
+      .btn svg { width: 56px; height: 56px; fill: white; }
       .window {
         position: absolute;
         bottom: 0;
