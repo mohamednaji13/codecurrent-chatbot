@@ -1,40 +1,53 @@
 (function() {
   const API_URL = window.CHATBOT_API_URL || 'http://localhost:3000';
   let chatOpen = false;
+  let sessionId = null;
+  try { sessionId = localStorage.getItem('chatbot_session'); } catch(e) {}
 
-  // Create the chatbot element
-  const chatbot = document.createElement('div');
-  chatbot.id = 'cc-chatbot-widget';
+  // Create container
+  const container = document.createElement('div');
+  container.id = 'cc-chatbot';
 
-  // Function to force position (called continuously)
-  function forcePosition() {
-    const el = document.getElementById('cc-chatbot-widget');
-    if (el) {
-      const width = chatOpen ? '400px' : '70px';
-      const height = chatOpen ? '600px' : '70px';
-      el.style.cssText = 'position:fixed!important;bottom:20px!important;right:20px!important;z-index:2147483647!important;width:' + width + '!important;height:' + height + '!important;background:transparent!important;border:none!important;pointer-events:auto!important;';
+  // Use absolute positioning and update via JS
+  function updatePosition() {
+    const width = chatOpen ? 400 : 70;
+    const height = chatOpen ? 600 : 70;
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
 
-      // Also ensure it's a direct child of body
-      if (el.parentNode !== document.body) {
-        document.body.appendChild(el);
-      }
-    }
-    requestAnimationFrame(forcePosition);
+    container.style.cssText =
+      'position:absolute!important;' +
+      'top:' + (scrollTop + viewportHeight - height - 20) + 'px!important;' +
+      'left:' + (scrollLeft + viewportWidth - width - 20) + 'px!important;' +
+      'width:' + width + 'px!important;' +
+      'height:' + height + 'px!important;' +
+      'z-index:2147483647!important;' +
+      'pointer-events:auto!important;';
   }
 
-  // Inject into body
-  document.body.appendChild(chatbot);
+  // Update position on scroll, resize, and animation frame
+  window.addEventListener('scroll', updatePosition, true);
+  window.addEventListener('resize', updatePosition, true);
 
-  // Start forcing position
-  forcePosition();
+  // Also use requestAnimationFrame for smooth updates
+  function tick() {
+    updatePosition();
+    requestAnimationFrame(tick);
+  }
+  tick();
 
-  // Create shadow DOM to isolate styles
-  const shadow = chatbot.attachShadow({mode: 'open'});
+  // Append to body
+  document.body.appendChild(container);
+
+  // Create shadow DOM
+  const shadow = container.attachShadow({mode: 'open'});
 
   shadow.innerHTML = `
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      :host { all: initial; }
+      :host { all: initial; display: block; width: 100%; height: 100%; }
       .btn {
         width: 60px;
         height: 60px;
@@ -51,11 +64,11 @@
         right: 0;
         transition: transform 0.2s;
       }
-      .btn:hover { transform: scale(1.05); }
+      .btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5); }
       .btn svg { width: 28px; height: 28px; fill: white; }
       .window {
         position: absolute;
-        bottom: 70px;
+        bottom: 0;
         right: 0;
         width: 380px;
         height: 520px;
@@ -171,18 +184,17 @@
   const snd = shadow.getElementById('snd');
   const msgs = shadow.getElementById('msgs');
 
-  let sessionId = null;
-  try { sessionId = localStorage.getItem('chatbot_session'); } catch(e) {}
-
   btn.onclick = function() {
     chatOpen = !chatOpen;
     win.classList.toggle('open', chatOpen);
+    updatePosition();
     if (chatOpen) inp.focus();
   };
 
   cls.onclick = function() {
     chatOpen = false;
     win.classList.remove('open');
+    updatePosition();
   };
 
   async function send() {
