@@ -10,7 +10,7 @@
 
   // Use absolute positioning and update via JS
   function updatePosition() {
-    const width = chatOpen ? 780 : 70;
+    const width = chatOpen ? 400 : 70;
     const height = chatOpen ? 1060 : 70;
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
@@ -70,7 +70,7 @@
         position: absolute;
         bottom: 0;
         right: 0;
-        width: 760px;
+        width: 380px;
         height: 1040px;
         background: white;
         border-radius: 16px;
