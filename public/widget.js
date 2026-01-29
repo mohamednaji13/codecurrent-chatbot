@@ -1,10 +1,16 @@
 (function() {
   const API_URL = window.CHATBOT_API_URL || 'http://localhost:3000';
 
-  // Create iframe container with inline styles (cannot be overridden)
-  const wrapper = document.createElement('div');
-  wrapper.id = 'chatbot-iframe-wrapper';
-  wrapper.setAttribute('style',
+  // Inject critical CSS into head to override everything
+  const criticalCSS = document.createElement('style');
+  criticalCSS.textContent = '#chatbot-iframe-wrapper{all:initial!important;position:fixed!important;bottom:20px!important;right:20px!important;z-index:2147483647!important;width:60px!important;height:60px!important;display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;}';
+  document.head.appendChild(criticalCSS);
+
+  // Create iframe directly (no wrapper)
+  const iframe = document.createElement('iframe');
+  iframe.id = 'chatbot-iframe-wrapper';
+  iframe.setAttribute('style',
+    'all:initial!important;' +
     'position:fixed!important;' +
     'bottom:20px!important;' +
     'right:20px!important;' +
@@ -13,24 +19,21 @@
     'height:60px!important;' +
     'border:none!important;' +
     'background:transparent!important;' +
+    'display:block!important;' +
+    'visibility:visible!important;' +
+    'opacity:1!important;' +
     'pointer-events:auto!important;' +
-    'transform:translateZ(0)!important;'
-  );
-
-  // Create iframe
-  const iframe = document.createElement('iframe');
-  iframe.id = 'chatbot-iframe';
-  iframe.setAttribute('style',
-    'width:100%!important;' +
-    'height:100%!important;' +
-    'border:none!important;' +
-    'background:transparent!important;'
+    'isolation:isolate!important;'
   );
   iframe.setAttribute('allowtransparency', 'true');
   iframe.setAttribute('frameborder', '0');
 
-  wrapper.appendChild(iframe);
-  document.documentElement.appendChild(wrapper);
+  // Insert as first child of body to avoid being trapped in containers
+  if (document.body.firstChild) {
+    document.body.insertBefore(iframe, document.body.firstChild);
+  } else {
+    document.body.appendChild(iframe);
+  }
 
   // Write chatbot HTML into iframe
   const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
@@ -200,11 +203,11 @@ const messages = document.getElementById('messages');
 function resize(open) {
   const wrapper = parent.document.getElementById('chatbot-iframe-wrapper');
   if (open) {
-    wrapper.style.width = '400px';
-    wrapper.style.height = '600px';
+    wrapper.style.setProperty('width', '400px', 'important');
+    wrapper.style.setProperty('height', '600px', 'important');
   } else {
-    wrapper.style.width = '60px';
-    wrapper.style.height = '60px';
+    wrapper.style.setProperty('width', '60px', 'important');
+    wrapper.style.setProperty('height', '60px', 'important');
   }
 }
 
