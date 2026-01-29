@@ -59,11 +59,13 @@ app.post('/api/chat', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('OpenAI Error:', error.message);
+    console.error('Error details:', error.status, error.code);
     res.status(500).json({ error: 'Failed to get response' });
   }
 });
 
 app.listen(PORT, () => {
   console.log(`Chatbot server running on port ${PORT}`);
+  console.log(`OpenAI API Key configured: ${process.env.OPENAI_API_KEY ? 'Yes' : 'No'}`);
 });
