@@ -1,86 +1,110 @@
 (function() {
   const API_URL = window.CHATBOT_API_URL || 'http://localhost:3000';
-  let chatOpen = false;
   let sessionId = null;
   try { sessionId = localStorage.getItem('chatbot_session'); } catch(e) {}
+
+  // Check for embed container
+  const embedContainer = document.getElementById('chatbot-embed');
+  const isEmbedded = !!embedContainer;
 
   // Create container
   const container = document.createElement('div');
   container.id = 'cc-chatbot';
 
-  // Use absolute positioning and update via JS
-  function updatePosition() {
-    const width = chatOpen ? 400 : 70;
-    const height = chatOpen ? 1060 : 70;
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-    const viewportHeight = window.innerHeight;
-    const viewportWidth = window.innerWidth;
+  if (isEmbedded) {
+    // Embedded mode - fill the container
+    container.style.cssText = 'width:100%;height:100%;';
+    embedContainer.appendChild(container);
+  } else {
+    // Floating mode
+    let chatOpen = false;
 
-    container.style.cssText =
-      'position:absolute!important;' +
-      'top:' + (scrollTop + viewportHeight - height - 20) + 'px!important;' +
-      'left:' + (scrollLeft + viewportWidth - width - 20) + 'px!important;' +
-      'width:' + width + 'px!important;' +
-      'height:' + height + 'px!important;' +
-      'z-index:2147483647!important;' +
-      'pointer-events:auto!important;';
+    function updatePosition() {
+      const width = chatOpen ? 400 : 70;
+      const height = chatOpen ? 1060 : 70;
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+
+      container.style.cssText =
+        'position:absolute!important;' +
+        'top:' + (scrollTop + viewportHeight - height - 20) + 'px!important;' +
+        'left:' + (scrollLeft + viewportWidth - width - 20) + 'px!important;' +
+        'width:' + width + 'px!important;' +
+        'height:' + height + 'px!important;' +
+        'z-index:2147483647!important;' +
+        'pointer-events:auto!important;';
+    }
+
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition, true);
+
+    function tick() {
+      updatePosition();
+      requestAnimationFrame(tick);
+    }
+    tick();
+
+    document.body.appendChild(container);
   }
-
-  // Update position on scroll, resize, and animation frame
-  window.addEventListener('scroll', updatePosition, true);
-  window.addEventListener('resize', updatePosition, true);
-
-  // Also use requestAnimationFrame for smooth updates
-  function tick() {
-    updatePosition();
-    requestAnimationFrame(tick);
-  }
-  tick();
-
-  // Append to body
-  document.body.appendChild(container);
 
   // Create shadow DOM
   const shadow = container.attachShadow({mode: 'open'});
 
+  const embeddedStyles = isEmbedded ? `
+    :host { display: block; width: 100%; height: 100%; }
+    .window {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex !important;
+    }
+    .btn { display: none !important; }
+    .close { display: none !important; }
+  ` : `
+    :host { all: initial; display: block; width: 100%; height: 100%; }
+    .window {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 380px;
+      height: 1040px;
+      display: none;
+    }
+    .window.open { display: flex; }
+    .btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      transition: transform 0.2s;
+    }
+    .btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5); }
+    .btn svg { width: 28px; height: 28px; fill: white; }
+  `;
+
   shadow.innerHTML = `
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      :host { all: initial; display: block; width: 100%; height: 100%; }
-      .btn {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #dc2626, #ef4444);
-        border: none;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        transition: transform 0.2s;
-      }
-      .btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5); }
-      .btn svg { width: 28px; height: 28px; fill: white; }
+      ${embeddedStyles}
       .window {
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 380px;
-        height: 1040px;
         background: white;
         border-radius: 16px;
         box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        display: none;
         flex-direction: column;
         overflow: hidden;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
-      .window.open { display: flex; }
       .header {
         background: linear-gradient(135deg, #dc2626, #ef4444);
         color: white;
@@ -184,18 +208,19 @@
   const snd = shadow.getElementById('snd');
   const msgs = shadow.getElementById('msgs');
 
-  btn.onclick = function() {
-    chatOpen = !chatOpen;
-    win.classList.toggle('open', chatOpen);
-    updatePosition();
-    if (chatOpen) inp.focus();
-  };
+  if (!isEmbedded) {
+    let chatOpen = false;
+    btn.onclick = function() {
+      chatOpen = !chatOpen;
+      win.classList.toggle('open', chatOpen);
+      if (chatOpen) inp.focus();
+    };
 
-  cls.onclick = function() {
-    chatOpen = false;
-    win.classList.remove('open');
-    updatePosition();
-  };
+    cls.onclick = function() {
+      chatOpen = false;
+      win.classList.remove('open');
+    };
+  }
 
   async function send() {
     const text = inp.value.trim();
