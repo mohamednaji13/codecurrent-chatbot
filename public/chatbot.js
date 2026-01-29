@@ -155,12 +155,19 @@
   `;
 
   function init() {
+    // Remove any existing chatbot first
+    const existing = document.getElementById('chatbot-widget-container');
+    if (existing) existing.remove();
+
     const styleSheet = document.createElement('style');
     styleSheet.textContent = styles;
     document.head.appendChild(styleSheet);
 
     const container = document.createElement('div');
+    container.id = 'chatbot-widget-container';
     container.className = 'chatbot-container';
+    // Force inline styles to override everything
+    container.style.cssText = 'position:fixed!important;bottom:20px!important;right:20px!important;z-index:2147483647!important;transform:none!important;pointer-events:auto!important;';
     container.innerHTML = `
       <div class="chatbot-window">
         <div class="chatbot-header">
@@ -250,9 +257,22 @@
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+  // Wait for full page load to ensure we're added last
+  function safeInit() {
+    // Small delay to ensure GoDaddy's scripts have finished
+    setTimeout(function() {
+      init();
+      // Re-append to body to ensure we're on top
+      const container = document.getElementById('chatbot-widget-container');
+      if (container && container.parentNode !== document.body) {
+        document.body.appendChild(container);
+      }
+    }, 500);
+  }
+
+  if (document.readyState === 'complete') {
+    safeInit();
   } else {
-    init();
+    window.addEventListener('load', safeInit);
   }
 })();
