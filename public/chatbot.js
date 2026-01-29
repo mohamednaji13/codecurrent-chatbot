@@ -5,11 +5,11 @@
 
   const styles = `
     .chatbot-container {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
+      position: fixed !important;
+      bottom: 20px !important;
+      right: 20px !important;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      z-index: 10000;
+      z-index: 2147483647 !important;
     }
     .chatbot-button {
       width: 60px;
