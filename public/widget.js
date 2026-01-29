@@ -1,6 +1,7 @@
 (function() {
   const API_URL = window.CHATBOT_API_URL || 'http://localhost:3000';
   let sessionId = null;
+  let chatOpen = false;
   try { sessionId = localStorage.getItem('chatbot_session'); } catch(e) {}
 
   // Check for embed container
@@ -12,13 +13,11 @@
   container.id = 'cc-chatbot';
 
   if (isEmbedded) {
-    // Embedded mode - fill the container
-    container.style.cssText = 'width:100%;height:100%;';
+    // Embedded mode - starts collapsed
+    container.style.cssText = 'width:100%;';
     embedContainer.appendChild(container);
   } else {
     // Floating mode
-    let chatOpen = false;
-
     function updatePosition() {
       const width = chatOpen ? 400 : 70;
       const height = chatOpen ? 1060 : 70;
@@ -53,15 +52,40 @@
   const shadow = container.attachShadow({mode: 'open'});
 
   const embeddedStyles = isEmbedded ? `
-    :host { display: block; width: 100%; height: 100%; }
+    :host { display: block; width: 100%; }
+    .wrapper { width: 100%; }
     .window {
-      position: relative;
       width: 100%;
-      height: 100%;
-      display: flex !important;
+      height: 500px;
+      display: none;
+      margin-top: 10px;
     }
-    .btn { display: none !important; }
-    .close { display: none !important; }
+    .window.open { display: flex; }
+    .btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s;
+    }
+    .btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5); }
+    .btn svg { width: 28px; height: 28px; fill: white; }
+    .btn.open { display: none; }
+    .close {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 24px;
+      opacity: 0.8;
+    }
+    .close:hover { opacity: 1; }
   ` : `
     :host { all: initial; display: block; width: 100%; height: 100%; }
     .window {
@@ -208,19 +232,18 @@
   const snd = shadow.getElementById('snd');
   const msgs = shadow.getElementById('msgs');
 
-  if (!isEmbedded) {
-    let chatOpen = false;
-    btn.onclick = function() {
-      chatOpen = !chatOpen;
-      win.classList.toggle('open', chatOpen);
-      if (chatOpen) inp.focus();
-    };
+  btn.onclick = function() {
+    chatOpen = !chatOpen;
+    win.classList.toggle('open', chatOpen);
+    btn.classList.toggle('open', chatOpen);
+    if (chatOpen) inp.focus();
+  };
 
-    cls.onclick = function() {
-      chatOpen = false;
-      win.classList.remove('open');
-    };
-  }
+  cls.onclick = function() {
+    chatOpen = false;
+    win.classList.remove('open');
+    btn.classList.remove('open');
+  };
 
   async function send() {
     const text = inp.value.trim();
